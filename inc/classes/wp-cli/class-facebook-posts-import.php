@@ -43,8 +43,10 @@ class Facebook_Posts_Import extends Base {
 	 * [--log-file=<file>]
 	 * : Path to the log file.
 	 *
+	 * @Todo: Provide option of post-type in which data will imported.
+	 *
 	 * ## EXAMPLE
-	 *      wp wp-facebook-posts-import import_from_json_file --import-file=facebook-posts.json
+	 *      wp wp-facebook-posts-import import_from_json_file --import-file=facebook-posts.json --logs=true
 	 *
 	 * @param array $args       Store all the positional arguments.
 	 * @param array $assoc_args Store all the associative arguments.
@@ -69,7 +71,7 @@ class Facebook_Posts_Import extends Base {
 			$this->error( 'Invalid file provided.' );
 		}
 
-		$json_content = file_get_contents( $json_file );
+		$json_content = file_get_contents( $json_file ); // phpcs:ignore
 		$json_content = json_decode( $json_content, true );
 
 		if ( empty( $json_content['data'] ) || ! is_array( $json_content['data'] ) ) {
@@ -129,9 +131,9 @@ class Facebook_Posts_Import extends Base {
 					}
 				}
 
-				$post_processed++;
-
 			}
+
+			$post_processed++;
 
 			/**
 			 * Halt script for some time.

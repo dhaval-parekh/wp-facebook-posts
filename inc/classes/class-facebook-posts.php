@@ -41,7 +41,7 @@ class Facebook_Posts {
 			sanitize_text_field( $facebook_post_id )
 		);
 
-		$row = $wpdb->get_row( $query, ARRAY_A );
+		$row = $wpdb->get_row( $query, ARRAY_A ); // phpcs:ignore
 
 		$post_id = ( ! empty( $row['post_id'] ) && 0 < intval( $row['post_id'] ) ) ? intval( $row['post_id'] ) : 0;
 
@@ -119,6 +119,9 @@ class Facebook_Posts {
 				'is_updated' => false,
 			];
 		}
+
+		// @Todo: Set featured image.
+		// @Todo: Import comments.
 
 		$post_meta_datas = [
 			'facebook_post_id'      => sanitize_text_field( $data['id'] ),

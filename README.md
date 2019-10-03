@@ -7,3 +7,7 @@ This plugin provide WP CLI command to import facebook page's post from JSON file
 | Command                  | Sub-Command           | Description                                           |
 |--------------------------|-----------------------|-------------------------------------------------------|
 | wp-facebook-posts-import | import_from_json_file | To import facebook posts to WordPress from JSON file. |
+
+
+### Todo Features
+- Add WP CLI command to import all post from facebook page.
