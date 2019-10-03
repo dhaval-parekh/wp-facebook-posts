@@ -44,7 +44,7 @@ class Facebook_Posts_Import extends Base {
 	 * : Path to the log file.
 	 *
 	 * ## EXAMPLE
-	 *      wp wp-facebook-posts-import import_from_json_file --file=facebook-posts.json
+	 *      wp wp-facebook-posts-import import_from_json_file --import-file=facebook-posts.json
 	 *
 	 * @param array $args       Store all the positional arguments.
 	 * @param array $assoc_args Store all the associative arguments.
