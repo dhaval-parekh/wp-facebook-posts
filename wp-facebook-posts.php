@@ -15,13 +15,6 @@
 define( 'WP_FACEBOOK_POSTS_PATH', untrailingslashit( plugin_dir_path( __FILE__ ) ) );
 define( 'WP_FACEBOOK_POSTS_URL', untrailingslashit( plugin_dir_url( __FILE__ ) ) );
 
-$vendor_autoload = sprintf( '%s/vendor/autoload.php', WP_FACEBOOK_POSTS_PATH );
-
-// Missing vendor autoload file or invalid file path.
-if ( empty( $vendor_autoload ) || ! file_exists( $vendor_autoload ) || 0 !== validate_file( $vendor_autoload ) ) {
-	return;
-}
-
 // We already making sure that file is exists and valid.
 require_once( sprintf( '%s/autoloader.php', WP_FACEBOOK_POSTS_PATH ) ); // phpcs:ignore
 
