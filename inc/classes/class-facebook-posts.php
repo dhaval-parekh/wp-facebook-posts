@@ -11,8 +11,6 @@ use WP_Facebook_Posts\Inc\Traits\Singleton;
 
 /**
  * Class Facebook_Posts
- *
- * @package WP_Facebook_Posts\Inc
  */
 class Facebook_Posts {
 
@@ -25,7 +23,7 @@ class Facebook_Posts {
 	 *
 	 * @return int Post ID.
 	 */
-	public static function get_post_by_facebook_post_id( $facebook_post_id ) {
+	public static function get_post_id_by_facebook_post_id( $facebook_post_id ) {
 
 		if ( empty( $facebook_post_id ) ) {
 			return 0;
@@ -33,6 +31,10 @@ class Facebook_Posts {
 
 		global $wpdb;
 
+		/**
+		 * Here, we are using custom query.
+		 * Since, WP_Query will join two tables which is not necessary.
+		 */
 		$query = $wpdb->prepare(
 			"SELECT * FROM {$wpdb->postmeta} WHERE meta_key=%s AND meta_value=%s;",
 			'facebook_post_id',
@@ -47,17 +49,22 @@ class Facebook_Posts {
 	}
 
 	/**
-	 * Helper function to update/insert Facebook post to WordPress.
+	 * Prepare facebook response data to import/update into WordPress.
 	 *
-	 * @param array $data Facebook post data.
+	 * @param array $data Facebook response data.
 	 *
-	 * @return array Response.
+	 * @return array Prepared data.
 	 */
-	public static function import_single_post( $data ) {
+	protected static function prepare_post_data( $data ) {
 
-		unset( $data['likes'], $data['comments'] );
+		if ( empty( $data ) || ! is_array( $data ) ) {
+			return [];
+		}
 
-		$existing_post_id = static::get_post_by_facebook_post_id( $data['id'] );
+		// If node don't have "id", Than don't import.
+		if ( empty( $data['id'] ) ) {
+			return [];
+		}
 
 		// Find and get if we have existing post for this.
 		$post_data = [
@@ -65,10 +72,6 @@ class Facebook_Posts {
 			'post_content' => ( ! empty( $data['message'] ) ) ? wp_kses_post( $data['message'] ) : '',
 			'post_status'  => 'draft',
 		];
-
-		if ( ! empty( $existing_post_id ) ) {
-			$post_data['ID'] = $existing_post_id;
-		}
 
 		// Published date.
 		$create_timestamp = strtotime( $data['created_time'] );
@@ -81,12 +84,30 @@ class Facebook_Posts {
 		$post_data['post_modified_gmt'] = date( 'Y-m-d H:i:s', strtotime( $data['updated_time'] ) );
 
 		// Post status.
-		if ( current_time( 'timestamp', true ) > $create_timestamp ) {
-			$post_data['post_status'] = 'publish';
+		$post_data['post_status'] = ( current_time( 'timestamp', true ) > $create_timestamp ) ? 'publish' : 'future';
+
+		// Check if same post is already imported.
+		$existing_post_id = static::get_post_id_by_facebook_post_id( $data['id'] );
+
+		if ( ! empty( $existing_post_id ) ) {
+			$post_data['ID'] = $existing_post_id;
 		}
 
-		// Set featured image.
-		if ( ! empty( $existing_post_id ) ) {
+		return $post_data;
+	}
+
+	/**
+	 * Helper function to update/insert Facebook post to WordPress.
+	 *
+	 * @param array $data Facebook post data.
+	 *
+	 * @return array Response.
+	 */
+	public static function import_single_post( $data ) {
+
+		$post_data = static::prepare_post_data( $data );
+
+		if ( ! empty( $post_data['ID'] ) ) {
 			$post_id = wp_update_post( $post_data );
 		} else {
 			$post_id = wp_insert_post( $post_data );
@@ -104,13 +125,13 @@ class Facebook_Posts {
 			'_facebook_import_data' => wp_json_encode( $data ),
 		];
 
-		foreach( $post_meta_datas as $meta_key => $meta_value ) {
+		foreach ( $post_meta_datas as $meta_key => $meta_value ) {
 			update_post_meta( $post_id, $meta_key, $meta_value );
 		}
 
 		return [
 			'post_id'    => $post_id,
-			'is_updated' => ( $existing_post_id ) ? true : false,
+			'is_updated' => ( $post_data['ID'] ) ? true : false,
 		];
 
 	}
