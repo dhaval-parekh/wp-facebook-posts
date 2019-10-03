@@ -55,6 +55,8 @@ class Facebook_Posts_Import extends Base {
 	 */
 	public function import_from_json_file( $args = [], $assoc_args = [] ) {
 
+		$batch_size = 100;
+
 		$this->_extract_args( $assoc_args );
 
 		$json_file = ( ! empty( [ $assoc_args['import-file'] ] ) ) ? $assoc_args['import-file'] : '';
@@ -74,6 +76,14 @@ class Facebook_Posts_Import extends Base {
 			$this->error( 'No post found in JSON file.' );
 		}
 
+		$this->success( 'WP-CLI command "wp wp-facebook-posts-import import_from_json_file"' );
+
+		if ( $this->dry_run ) {
+			$this->success( 'Dry Run -- ' . PHP_EOL );
+		} else {
+			$this->success( 'Actual Run -- ' . PHP_EOL );
+		}
+
 		$posts = $json_content['data'];
 
 		$counter = [
@@ -90,7 +100,7 @@ class Facebook_Posts_Import extends Base {
 
 			if ( $this->dry_run ) {
 
-				$existing_post_id = Facebook_Posts::get_post_by_facebook_post_id( $facebook_post_id );
+				$existing_post_id = Facebook_Posts::get_post_id_by_facebook_post_id( $facebook_post_id );
 
 				if ( ! empty( $existing_post_id ) ) {
 					$this->write_log( sprintf( 'Facebook post "%s" will update "%s".', $facebook_post_id, $existing_post_id ) );
@@ -121,10 +131,13 @@ class Facebook_Posts_Import extends Base {
 
 				$post_processed++;
 
-				if ( $post_processed % 10 === 0 ) {
-					sleep( 1 );
-				}
+			}
 
+			/**
+			 * Halt script for some time.
+			 */
+			if ( 0 === ( $post_processed % $batch_size ) ) {
+				sleep( 1 );
 			}
 
 		}
