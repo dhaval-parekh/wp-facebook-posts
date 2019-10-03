@@ -43,6 +43,8 @@ class Facebook_Posts_Import extends Base {
 	 * [--log-file=<file>]
 	 * : Path to the log file.
 	 *
+	 * @Todo: Provide option of post-type in which data will imported.
+	 *
 	 * ## EXAMPLE
 	 *      wp wp-facebook-posts-import import_from_json_file --import-file=facebook-posts.json
 	 *
@@ -129,9 +131,9 @@ class Facebook_Posts_Import extends Base {
 					}
 				}
 
-				$post_processed++;
-
 			}
+
+			$post_processed++;
 
 			/**
 			 * Halt script for some time.

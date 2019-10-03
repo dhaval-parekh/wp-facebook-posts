@@ -120,6 +120,9 @@ class Facebook_Posts {
 			];
 		}
 
+		// @Todo: Set featured image.
+		// @Todo: Import comments.
+
 		$post_meta_datas = [
 			'facebook_post_id'      => sanitize_text_field( $data['id'] ),
 			'_facebook_import_data' => wp_json_encode( $data ),
