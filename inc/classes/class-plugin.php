@@ -22,6 +22,7 @@ class Plugin {
 	protected function __construct() {
 
 		// Load all classes here.
+		WP_CLI::get_instance();
 
 	}
 
