@@ -51,7 +51,7 @@ class Facebook_Posts_Import extends Base {
 	 * @param array $args       Store all the positional arguments.
 	 * @param array $assoc_args Store all the associative arguments.
 	 *
-	 * @throws \WP_CLI\ExitException
+	 * @throws \WP_CLI\ExitException WP CLI Exit Exception.
 	 *
 	 * @return void
 	 */
@@ -111,7 +111,6 @@ class Facebook_Posts_Import extends Base {
 					$this->write_log( sprintf( 'Facebook post "%s" will create new post.', $facebook_post_id ) );
 					$counter['created']++;
 				}
-
 			} else {
 				$response = Facebook_Posts::import_single_post( $post_data );
 
@@ -130,7 +129,6 @@ class Facebook_Posts_Import extends Base {
 						$counter['created']++;
 					}
 				}
-
 			}
 
 			$post_processed++;
@@ -141,7 +139,6 @@ class Facebook_Posts_Import extends Base {
 			if ( 0 === ( $post_processed % $batch_size ) ) {
 				sleep( 1 );
 			}
-
 		}
 
 		if ( $this->dry_run ) {

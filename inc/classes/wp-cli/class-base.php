@@ -83,7 +83,7 @@ class Base extends \WP_CLI_Command {
 	 * @param string $message      Message to add to log and to output on screen.
 	 * @param int    $message_type Message type - 0 for normal line, -1 for error, 1 for success, 2 for warning.
 	 *
-	 * @throws \WP_CLI\ExitException
+	 * @throws \WP_CLI\ExitException WP CLI Exit Exception.
 	 *
 	 * @return void
 	 */
@@ -150,7 +150,7 @@ class Base extends \WP_CLI_Command {
 	 *
 	 * @param string $message Message to add to log and to outout on screen.
 	 *
-	 * @throws \WP_CLI\ExitException
+	 * @throws \WP_CLI\ExitException WP CLI Exit Exception.
 	 *
 	 * @return void
 	 */
@@ -163,7 +163,7 @@ class Base extends \WP_CLI_Command {
 	 *
 	 * @param string $message Message to add to log and to outout on screen.
 	 *
-	 * @throws \WP_CLI\ExitException
+	 * @throws \WP_CLI\ExitException WP CLI Exit Exception.
 	 *
 	 * @return void
 	 */
@@ -176,7 +176,7 @@ class Base extends \WP_CLI_Command {
 	 *
 	 * @param string $message Message to add to log and to outout on screen.
 	 *
-	 * @throws \WP_CLI\ExitException
+	 * @throws \WP_CLI\ExitException WP CLI Exit Exception.
 	 *
 	 * @return void
 	 */

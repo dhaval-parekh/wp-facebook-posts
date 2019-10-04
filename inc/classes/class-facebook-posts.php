@@ -77,11 +77,11 @@ class Facebook_Posts {
 		$create_timestamp = strtotime( $data['created_time'] );
 
 		$post_data['post_date']     = get_date_from_gmt( $data['created_time'] );
-		$post_data['post_date_gmt'] = date( 'Y-m-d H:i:s', strtotime( $data['created_time'] ) );
+		$post_data['post_date_gmt'] = gmdate( 'Y-m-d H:i:s', strtotime( $data['created_time'] ) );
 
 		// Last modified date.
 		$post_data['post_modified']     = get_date_from_gmt( $data['updated_time'] );
-		$post_data['post_modified_gmt'] = date( 'Y-m-d H:i:s', strtotime( $data['updated_time'] ) );
+		$post_data['post_modified_gmt'] = gmdate( 'Y-m-d H:i:s', strtotime( $data['updated_time'] ) );
 
 		// Post status.
 		$post_data['post_status'] = ( current_time( 'timestamp', true ) > $create_timestamp ) ? 'publish' : 'future';
