@@ -8,6 +8,7 @@
 namespace WP_Facebook_Posts\Inc\WP_CLI;
 
 use WP_Facebook_Posts\Inc\Facebook_Posts;
+use function WP_CLI\Utils\get_flag_value;
 
 /**
  * To import facebook posts from various source.
@@ -61,7 +62,7 @@ class Facebook_Posts_Import extends Base {
 
 		$this->_extract_args( $assoc_args );
 
-		$json_file = ( ! empty( [ $assoc_args['import-file'] ] ) ) ? $assoc_args['import-file'] : '';
+		$json_file = filter_var( get_flag_value( $assoc_args, 'import-file' ), FILTER_SANITIZE_STRING );
 
 		if ( empty( $json_file ) ) {
 			$this->error( 'Please provide JSON file.' );
@@ -71,7 +72,7 @@ class Facebook_Posts_Import extends Base {
 			$this->error( 'Invalid file provided.' );
 		}
 
-		$json_content = file_get_contents( $json_file ); // phpcs:ignore
+		$json_content = file_get_contents( $json_file );
 		$json_content = json_decode( $json_content, true );
 
 		if ( empty( $json_content['data'] ) || ! is_array( $json_content['data'] ) ) {
@@ -95,6 +96,9 @@ class Facebook_Posts_Import extends Base {
 		];
 
 		$post_processed = 0;
+
+		// Importing start.
+		$this->_import_start();
 
 		foreach ( $posts as $post_data ) {
 
@@ -138,8 +142,12 @@ class Facebook_Posts_Import extends Base {
 			 */
 			if ( 0 === ( $post_processed % $batch_size ) ) {
 				sleep( 1 );
+				$this->stop_the_insanity();
 			}
 		}
+
+		// Importing end.
+		$this->_import_end();
 
 		if ( $this->dry_run ) {
 			$this->success( sprintf( '"%d" posts will create.', $counter['created'] ) );
@@ -150,6 +158,77 @@ class Facebook_Posts_Import extends Base {
 			$this->warning( sprintf( '"%d" posts are failed to import.', $counter['failed'] ) );
 		}
 
+	}
+
+	/**
+	 * To handle all process before importing.
+	 *
+	 * @return void
+	 */
+	protected function _import_start() {
+
+		if ( ! defined( 'WP_IMPORTING' ) ) {
+			define( 'WP_IMPORTING', true );
+		}
+
+		wp_suspend_cache_addition( true );
+
+		wp_suspend_cache_invalidation( true );
+
+		wp_defer_comment_counting( true );
+
+		wp_defer_term_counting( true );
+
+	}
+
+	/**
+	 * To handle all process after importing.
+	 *
+	 * @return void
+	 */
+	protected function _import_end() {
+
+		wp_suspend_cache_addition( true );
+
+		wp_suspend_cache_invalidation( false );
+
+		wp_defer_comment_counting( true );
+
+		wp_defer_term_counting( true );
+
+	}
+
+
+	/**
+	 * Clear all of the caches for memory management.
+	 *
+	 * Reference: https://github.com/Automattic/vip-go-mu-plugins/blob/master/vip-helpers/vip-wp-cli.php#L8
+	 *
+	 * @return void
+	 */
+	protected function stop_the_insanity() {
+
+		/**
+		 * Global variables.
+		 *
+		 * @var \WP_Object_Cache $wp_object_cache
+		 * @var \wpdb            $wpdb
+		 */
+		global $wpdb, $wp_object_cache;
+
+		$wpdb->queries = array();
+
+		if ( is_object( $wp_object_cache ) ) {
+			$wp_object_cache->group_ops      = array();
+			$wp_object_cache->stats          = array();
+			$wp_object_cache->memcache_debug = array();
+			$wp_object_cache->cache          = array();
+
+			if ( method_exists( $wp_object_cache, '__remoteset' ) ) {
+				// Important.
+				$wp_object_cache->__remoteset();
+			}
+		}
 	}
 
 }

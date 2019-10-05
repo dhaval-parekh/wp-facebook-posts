@@ -21,7 +21,7 @@ class Facebook_Posts {
 	 *
 	 * @param string $facebook_post_id Facebook post ID.
 	 *
-	 * @return int Post ID.
+	 * @return int Post ID on if post is exists otherwise 0.
 	 */
 	public static function get_post_id_by_facebook_post_id( $facebook_post_id ) {
 
@@ -35,17 +35,16 @@ class Facebook_Posts {
 		 * Here, we are using custom query.
 		 * Since, WP_Query will join two tables which is not necessary.
 		 */
-		$query = $wpdb->prepare(
-			"SELECT * FROM {$wpdb->postmeta} WHERE meta_key=%s AND meta_value=%s;",
-			'facebook_post_id',
-			sanitize_text_field( $facebook_post_id )
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->postmeta} WHERE meta_key=%s AND meta_value=%s;",
+				'facebook_post_id',
+				sanitize_text_field( $facebook_post_id )
+			),
+			ARRAY_A
 		);
 
-		$row = $wpdb->get_row( $query, ARRAY_A ); // phpcs:ignore
-
-		$post_id = ( ! empty( $row['post_id'] ) && 0 < intval( $row['post_id'] ) ) ? intval( $row['post_id'] ) : 0;
-
-		return $post_id;
+		return ( ! empty( $row['post_id'] ) && 0 < intval( $row['post_id'] ) ) ? intval( $row['post_id'] ) : 0;
 	}
 
 	/**

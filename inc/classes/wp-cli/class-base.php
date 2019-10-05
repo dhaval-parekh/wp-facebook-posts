@@ -7,6 +7,8 @@
 
 namespace WP_Facebook_Posts\Inc\WP_CLI;
 
+use function WP_CLI\Utils\get_flag_value;
+
 /**
  * Class Base
  */
@@ -45,35 +47,16 @@ class Base extends \WP_CLI_Command {
 	 *
 	 * @param array $assoc_args Associative arguments.
 	 *
-	 * @return bool
+	 * @return void
 	 */
 	protected function _extract_args( $assoc_args ) {
 
+		$assoc_args = ( ! empty( $assoc_args ) && is_array( $assoc_args ) ) ? $assoc_args : [];
+
 		$this->_assoc_args = $assoc_args;
-
-		if ( empty( $assoc_args ) ) {
-			return false;
-		}
-
-		if ( ! empty( $assoc_args['log-file'] ) ) {
-			$this->log_file = $assoc_args['log-file'];
-		}
-
-		if ( isset( $assoc_args['logs'] ) ) {
-			$this->logs = empty( $assoc_args['logs'] ) || 'true' === $assoc_args['logs'];
-		} else {
-			$this->logs = false;
-		}
-
-		if ( isset( $assoc_args['dry-run'] ) ) {
-			$this->dry_run = empty( $assoc_args['dry-run'] ) || 'true' === $assoc_args['dry-run'];
-		} else {
-			$this->dry_run = true;
-		}
-
-		if ( isset( $assoc_args['email'] ) ) {
-			$this->email = $assoc_args['email'];
-		}
+		$this->log_file    = filter_var( get_flag_value( $assoc_args, 'log-file' ), FILTER_SANITIZE_STRING );
+		$this->logs        = filter_var( get_flag_value( $assoc_args, 'logs', true ), FILTER_VALIDATE_BOOLEAN );
+		$this->dry_run     = filter_var( get_flag_value( $assoc_args, 'dry-run', true ), FILTER_VALIDATE_BOOLEAN );
 
 	}
 
@@ -116,7 +99,7 @@ class Base extends \WP_CLI_Command {
 
 		// Log message to log file if a log file.
 		if ( ! empty( $this->log_file ) ) {
-			file_put_contents( $this->log_file, $message_prefix . $message . "\n", FILE_APPEND ); // phpcs:ignore
+			file_put_contents( $this->log_file, $message_prefix . $message . "\n", FILE_APPEND );
 		}
 
 		if ( ! empty( $this->logs ) ) {

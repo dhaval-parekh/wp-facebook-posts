@@ -16,7 +16,7 @@ define( 'WP_FACEBOOK_POSTS_PATH', untrailingslashit( plugin_dir_path( __FILE__ )
 define( 'WP_FACEBOOK_POSTS_URL', untrailingslashit( plugin_dir_url( __FILE__ ) ) );
 
 // We already making sure that file is exists and valid.
-require_once( sprintf( '%s/autoloader.php', WP_FACEBOOK_POSTS_PATH ) ); // phpcs:ignore
+require_once( sprintf( '%s/autoloader.php', WP_FACEBOOK_POSTS_PATH ) );
 
 // Initialize plugin.
 \WP_Facebook_Posts\Inc\Plugin::get_instance();
