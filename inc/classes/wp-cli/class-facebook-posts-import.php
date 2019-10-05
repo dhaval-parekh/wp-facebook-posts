@@ -66,8 +66,6 @@ class Facebook_Posts_Import extends Base {
 	 */
 	public function import_from_json_file( $args = [], $assoc_args = [] ) {
 
-		$batch_size = 100;
-
 		$this->_extract_args( $assoc_args );
 
 		$json_file         = filter_var( get_flag_value( $assoc_args, 'import-file' ), FILTER_SANITIZE_STRING );
@@ -89,6 +87,13 @@ class Facebook_Posts_Import extends Base {
 		}
 
 		$this->success( 'WP-CLI command "wp wp-facebook-posts-import import_from_json_file"' );
+
+		/**
+		 * Since in dry run not insert/update will not perform.
+		 * keep batch size high for dry run.
+		 */
+		$batch_size = ( $this->dry_run ) ? 10000 : 200;
+		$sleep_time = 1; // Time is in second.
 
 		if ( $this->dry_run ) {
 			$this->success( 'Dry Run -- ' . PHP_EOL );
@@ -165,7 +170,7 @@ class Facebook_Posts_Import extends Base {
 			 * Halt script for some time.
 			 */
 			if ( 0 === ( $post_processed % $batch_size ) ) {
-				sleep( 1 );
+				sleep( $sleep_time );
 				$this->_stop_the_insanity();
 			}
 
