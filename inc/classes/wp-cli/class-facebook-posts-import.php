@@ -120,9 +120,10 @@ class Facebook_Posts_Import extends Base {
 
 				$post_id    = ( ! empty( $response['post_id'] ) ) ? $response['post_id'] : 0;
 				$is_updated = ( ! empty( $response['is_updated'] ) ) ? $response['is_updated'] : false;
+				$message    = ( ! empty( $response['message'] ) ) ? $response['message'] : '';
 
 				if ( empty( $post_id ) ) {
-					$this->warning( sprintf( 'Facebook post "%s", Failed to import.', $facebook_post_id ) );
+					$this->warning( sprintf( 'Facebook post "%s", Failed to import. Reason: %s', $facebook_post_id, $message ) );
 					$counter['failed']++;
 				} else {
 					if ( $is_updated ) {

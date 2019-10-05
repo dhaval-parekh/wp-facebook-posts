@@ -120,12 +120,20 @@ class Facebook_Posts {
 
 		$post_data = static::_prepare_post_data( $data );
 
-		$post_id = wp_insert_post( $post_data );
+		$post_id = wp_insert_post( $post_data, true );
 
 		if ( empty( $post_id ) || is_wp_error( $post_id ) ) {
+
+			$message = '';
+
+			if ( is_wp_error( $post_id ) ) {
+				$message = $post_id->get_error_message();
+			}
+
 			return [
 				'post_id'    => 0,
 				'is_updated' => false,
+				'message'    => $message,
 			];
 		}
 
