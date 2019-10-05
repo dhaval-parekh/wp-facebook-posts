@@ -114,7 +114,7 @@ class Facebook_Posts {
 	 *
 	 * @param array $data        Facebook post data.
 	 * @param array $import_args Import argument.
-	 *                           attachment-import: Whether or not to import attachment or not. By default false
+	 *                           attachment-import: Whether or not to import attachment or not. By default false.
 	 *
 	 * @return array Response.
 	 */
@@ -162,7 +162,6 @@ class Facebook_Posts {
 				if ( ! empty( $attachment_id ) && 0 < intval( $attachment_id ) ) {
 					set_post_thumbnail( $post_id, $attachment_id );
 				}
-
 			}
 		}
 

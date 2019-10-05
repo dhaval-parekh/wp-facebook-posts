@@ -38,7 +38,7 @@ class Media {
 	/**
 	 * To find attachment ID from URL (from which it's imported in WordPress).
 	 *
-	 * @param string $url URL from which it's imported
+	 * @param string $url URL from which it's imported.
 	 *
 	 * @return int Attachment ID.
 	 */
@@ -86,9 +86,9 @@ class Media {
 	/**
 	 * If fetching attachments is enabled then attempt to create a new attachment
 	 *
-	 * @param string $url URL to fetch attachment from
+	 * @param string $url URL to fetch attachment from.
 	 *
-	 * @return int|\WP_Error Post ID on success, WP_Error otherwise
+	 * @return int|\WP_Error Post ID on success, WP_Error otherwise.
 	 */
 	public static function create_attachment_by_url( $url ) {
 
@@ -177,9 +177,12 @@ class Media {
 		$file_name = sanitize_file_name( $file_name );
 
 		// Fetch the remote url and write it to the placeholder file.
-		$remote_response = wp_safe_remote_get( $url, [
-			'timeout' => 20,
-		] );
+		$remote_response = wp_safe_remote_get(
+			$url,
+			[
+				'timeout' => 20,
+			]
+		);
 
 		$headers = wp_remote_retrieve_headers( $remote_response );
 
@@ -194,6 +197,7 @@ class Media {
 		if ( 200 !== intval( $remote_response_code ) ) {
 			return new \WP_Error(
 				'import_file_error',
+				/* translators: %s Response code */
 				sprintf( __( 'Remote server returned error response %1$d %2$s', 'wp-facebook-posts' ), esc_html( $remote_response_code ), get_status_header_desc( $remote_response_code ) )
 			);
 		}
