@@ -142,7 +142,7 @@ class Facebook_Posts_Import extends Base {
 			 */
 			if ( 0 === ( $post_processed % $batch_size ) ) {
 				sleep( 1 );
-				$this->stop_the_insanity();
+				$this->_stop_the_insanity();
 			}
 		}
 
@@ -188,13 +188,13 @@ class Facebook_Posts_Import extends Base {
 	 */
 	protected function _import_end() {
 
-		wp_suspend_cache_addition( true );
+		wp_suspend_cache_addition( false );
 
 		wp_suspend_cache_invalidation( false );
 
-		wp_defer_comment_counting( true );
+		wp_defer_comment_counting( false );
 
-		wp_defer_term_counting( true );
+		wp_defer_term_counting( false );
 
 	}
 
@@ -206,7 +206,7 @@ class Facebook_Posts_Import extends Base {
 	 *
 	 * @return void
 	 */
-	protected function stop_the_insanity() {
+	protected function _stop_the_insanity() {
 
 		/**
 		 * Global variables.

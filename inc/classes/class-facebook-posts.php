@@ -54,7 +54,7 @@ class Facebook_Posts {
 	 *
 	 * @return array Prepared data.
 	 */
-	protected static function prepare_post_data( $data ) {
+	protected static function _prepare_post_data( $data ) {
 
 		if ( empty( $data ) || ! is_array( $data ) ) {
 			return [];
@@ -113,7 +113,7 @@ class Facebook_Posts {
 	 */
 	public static function import_single_post( $data ) {
 
-		$post_data = static::prepare_post_data( $data );
+		$post_data = static::_prepare_post_data( $data );
 
 		$post_id = wp_insert_post( $post_data );
 
