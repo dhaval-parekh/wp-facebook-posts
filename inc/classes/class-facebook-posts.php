@@ -159,7 +159,7 @@ class Facebook_Posts {
 
 				$attachment_id = Media::create_attachment_by_url( $attachment_url );
 
-				if ( ! empty( $attachment_id ) && 0 < intval( $attachment_id ) ) {
+				if ( ! empty( $attachment_id ) && ! is_wp_error( $attachment_id ) && 0 < intval( $attachment_id ) ) {
 					set_post_thumbnail( $post_id, $attachment_id );
 				}
 			}
