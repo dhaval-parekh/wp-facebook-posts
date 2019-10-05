@@ -2,7 +2,6 @@
 /**
  * To register all wp cli commands.
  *
- *
  * @package wp-facebook-posts
  */
 
@@ -22,7 +21,7 @@ class WP_CLI {
 	 */
 	protected function __construct() {
 
-		if ( ! defined('WP_CLI') || ! WP_CLI ) {
+		if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
 			return;
 		}
 

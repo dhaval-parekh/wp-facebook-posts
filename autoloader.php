@@ -51,7 +51,7 @@ function autoloader( $resource = '' ) {
 				$file_name = sprintf( 'trait-%s', trim( strtolower( $path[2] ) ) );
 				break;
 
-			case 'wp-cli': // phpcs:ignore PSR2.ControlStructures.SwitchDeclaration.TerminatingComment
+			case 'wp-cli':
 				/**
 				 * If there is class name provided for specific directory then load that.
 				 * otherwise find in inc/ directory.
@@ -61,6 +61,9 @@ function autoloader( $resource = '' ) {
 					$file_name = sprintf( 'class-%s', trim( strtolower( $path[2] ) ) );
 					break;
 				}
+
+				// If there is not directory specified in namespace.
+				// Then look in to /classes directory if we have class file for same.
 			default:
 				$directory = 'classes';
 				$file_name = sprintf( 'class-%s', trim( strtolower( $path[1] ) ) );
@@ -73,7 +76,7 @@ function autoloader( $resource = '' ) {
 
 	if ( ! empty( $resource_path ) && file_exists( $resource_path ) && 0 === validate_file( $resource_path ) ) {
 		// We already making sure that file is exists and valid.
-		require_once( $resource_path ); // phpcs:ignore
+		require_once( $resource_path );
 	}
 
 }
