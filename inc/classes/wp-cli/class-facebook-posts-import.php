@@ -66,8 +66,6 @@ class Facebook_Posts_Import extends Base {
 	 */
 	public function import_from_json_file( $args = [], $assoc_args = [] ) {
 
-		$batch_size = 100;
-
 		$this->_extract_args( $assoc_args );
 
 		$json_file         = filter_var( get_flag_value( $assoc_args, 'import-file' ), FILTER_SANITIZE_STRING );
@@ -90,6 +88,13 @@ class Facebook_Posts_Import extends Base {
 
 		$this->success( 'WP-CLI command "wp wp-facebook-posts-import import_from_json_file"' );
 
+		/**
+		 * Since in dry run not insert/update will not perform.
+		 * keep batch size high for dry run.
+		 */
+		$batch_size = ( $this->dry_run ) ? 10000 : 200;
+		$sleep_time = 1; // Time is in second.
+
 		if ( $this->dry_run ) {
 			$this->success( 'Dry Run -- ' . PHP_EOL );
 		} else {
@@ -101,6 +106,7 @@ class Facebook_Posts_Import extends Base {
 		$counter = [
 			'created' => 0,
 			'updated' => 0,
+			'skipped' => 0,
 			'failed'  => 0,
 		];
 
@@ -110,10 +116,15 @@ class Facebook_Posts_Import extends Base {
 			'attachment-import' => $attachment_import,
 		];
 
+		$index       = 0;
+		$post_counts = count( $posts );
+
 		// Importing start.
 		$this->_import_start();
 
-		foreach ( $posts as $post_data ) {
+		for ( $index = 0; $index < $post_counts; $index++ ) {
+
+			$post_data = $posts[ $index ];
 
 			$facebook_post_id = ( ! empty( $post_data['id'] ) ) ? $post_data['id'] : '';
 
@@ -122,10 +133,10 @@ class Facebook_Posts_Import extends Base {
 				$existing_post_id = Facebook_Posts::get_post_id_by_facebook_post_id( $facebook_post_id );
 
 				if ( ! empty( $existing_post_id ) ) {
-					$this->write_log( sprintf( 'Facebook post "%s" will update "%s".', $facebook_post_id, $existing_post_id ) );
+					$this->write_log( sprintf( 'Facebook post %s: -- Will update %s.', $facebook_post_id, $existing_post_id ) );
 					$counter['updated']++;
 				} else {
-					$this->write_log( sprintf( 'Facebook post "%s" will create new post.', $facebook_post_id ) );
+					$this->write_log( sprintf( 'Facebook post %s: -- Will create new post.', $facebook_post_id ) );
 					$counter['created']++;
 				}
 			} else {
@@ -133,17 +144,21 @@ class Facebook_Posts_Import extends Base {
 
 				$post_id    = ( ! empty( $response['post_id'] ) ) ? $response['post_id'] : 0;
 				$is_updated = ( ! empty( $response['is_updated'] ) ) ? $response['is_updated'] : false;
+				$is_skipped = ( ! empty( $response['is_skipped'] ) ) ? $response['is_skipped'] : false;
 				$message    = ( ! empty( $response['message'] ) ) ? $response['message'] : '';
 
 				if ( empty( $post_id ) ) {
-					$this->warning( sprintf( 'Facebook post "%s", Failed to import. Reason: %s', $facebook_post_id, $message ) );
+					$this->warning( sprintf( 'Facebook post %s: -- Failed -- Message: %s', $facebook_post_id, $message ) );
 					$counter['failed']++;
 				} else {
-					if ( $is_updated ) {
-						$this->success( sprintf( 'Facebook post "%s", Updates post "%s".', $facebook_post_id, $post_id ) );
+					if ( $is_skipped ) {
+						$this->warning( sprintf( 'Facebook post %s: -- Skipped -- Post ID: %s -- Message: %s', $facebook_post_id, $post_id, $message ) );
+						$counter['skipped']++;
+					} elseif ( $is_updated ) {
+						$this->success( sprintf( 'Facebook post %s: -- Updated: %s', $facebook_post_id, $post_id ) );
 						$counter['updated']++;
 					} else {
-						$this->success( sprintf( 'Facebook post "%s", Created post "%s".', $facebook_post_id, $post_id ) );
+						$this->success( sprintf( 'Facebook post %s: -- Created: %s', $facebook_post_id, $post_id ) );
 						$counter['created']++;
 					}
 				}
@@ -155,9 +170,11 @@ class Facebook_Posts_Import extends Base {
 			 * Halt script for some time.
 			 */
 			if ( 0 === ( $post_processed % $batch_size ) ) {
-				sleep( 1 );
+				sleep( $sleep_time );
 				$this->_stop_the_insanity();
 			}
+
+			unset( $post_data, $posts[ $index ] );
 		}
 
 		// Importing end.
