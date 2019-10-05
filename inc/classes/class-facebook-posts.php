@@ -90,6 +90,11 @@ class Facebook_Posts {
 			],
 		];
 
+		// If there is not title or content. then make it draft.
+		if ( empty( $post_data['post_title'] ) || empty( $post_data['post_content'] ) ) {
+			$post_data['post_status'] = 'draft';
+		}
+
 		// Check if same post is already imported.
 		$existing_post_id = static::get_post_id_by_facebook_post_id( $data['id'] );
 
