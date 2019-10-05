@@ -66,29 +66,38 @@ class Facebook_Posts {
 			return [];
 		}
 
-		// Find and get if we have existing post for this.
-		$post_data = [
-			'post_title'   => ( ! empty( $data['name'] ) ) ? sanitize_text_field( $data['name'] ) : '',
-			'post_content' => ( ! empty( $data['message'] ) ) ? wp_kses_post( $data['message'] ) : '',
-			'post_status'  => 'draft',
-		];
-
-		// Published date.
 		$create_timestamp = strtotime( $data['created_time'] );
 
-		$post_data['post_date']     = get_date_from_gmt( $data['created_time'] );
-		$post_data['post_date_gmt'] = gmdate( 'Y-m-d H:i:s', strtotime( $data['created_time'] ) );
+		// Find and get if we have existing post for this.
+		$post_data = [
+			'post_title'        => ( ! empty( $data['name'] ) ) ? sanitize_text_field( $data['name'] ) : '',
+			'post_content'      => ( ! empty( $data['message'] ) ) ? wp_kses_post( $data['message'] ) : '',
 
-		// Last modified date.
-		$post_data['post_modified']     = get_date_from_gmt( $data['updated_time'] );
-		$post_data['post_modified_gmt'] = gmdate( 'Y-m-d H:i:s', strtotime( $data['updated_time'] ) );
+			// Post status.
+			'post_status'       => ( current_time( 'timestamp', true ) > $create_timestamp ) ? 'publish' : 'future',
 
-		// Post status.
-		$post_data['post_status'] = ( current_time( 'timestamp', true ) > $create_timestamp ) ? 'publish' : 'future';
+			// Published date.
+			'post_date'         => get_date_from_gmt( $data['created_time'] ),
+			'post_date_gmt'     => gmdate( 'Y-m-d H:i:s', strtotime( $data['created_time'] ) ),
+
+			// Last modified date.
+			'post_modified'     => get_date_from_gmt( $data['updated_time'] ),
+			'post_modified_gmt' => gmdate( 'Y-m-d H:i:s', strtotime( $data['updated_time'] ) ),
+
+			// Meta data.
+			'meta_input'        => [
+				'facebook_post_id'      => sanitize_text_field( $data['id'] ),
+				'_facebook_import_data' => wp_json_encode( $data ),
+			],
+		];
 
 		// Check if same post is already imported.
 		$existing_post_id = static::get_post_id_by_facebook_post_id( $data['id'] );
 
+		/**
+		 * If we have existing post for this facebook post,
+		 * Then pass update same post instead of creating new post for it.
+		 */
 		if ( ! empty( $existing_post_id ) ) {
 			$post_data['ID'] = $existing_post_id;
 		}
@@ -107,11 +116,7 @@ class Facebook_Posts {
 
 		$post_data = static::prepare_post_data( $data );
 
-		if ( ! empty( $post_data['ID'] ) ) {
-			$post_id = wp_update_post( $post_data );
-		} else {
-			$post_id = wp_insert_post( $post_data );
-		}
+		$post_id = wp_insert_post( $post_data );
 
 		if ( empty( $post_id ) || is_wp_error( $post_id ) ) {
 			return [
@@ -123,18 +128,9 @@ class Facebook_Posts {
 		// @Todo: Set featured image.
 		// @Todo: Import comments.
 
-		$post_meta_datas = [
-			'facebook_post_id'      => sanitize_text_field( $data['id'] ),
-			'_facebook_import_data' => wp_json_encode( $data ),
-		];
-
-		foreach ( $post_meta_datas as $meta_key => $meta_value ) {
-			update_post_meta( $post_id, $meta_key, $meta_value );
-		}
-
 		return [
 			'post_id'    => $post_id,
-			'is_updated' => ( $post_data['ID'] ) ? true : false,
+			'is_updated' => ( ! empty( $post_data['ID'] ) ) ? true : false,
 		];
 
 	}
