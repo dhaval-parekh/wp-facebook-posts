@@ -112,11 +112,19 @@ class Facebook_Posts {
 	/**
 	 * Helper function to update/insert Facebook post to WordPress.
 	 *
-	 * @param array $data Facebook post data.
+	 * @param array $data        Facebook post data.
+	 * @param array $import_args Import argument.
+	 *                           attachment-import: Whether or not to import attachment or not. By default false
 	 *
 	 * @return array Response.
 	 */
-	public static function import_single_post( $data ) {
+	public static function import_single_post( $data, $import_args = [] ) {
+
+		$default_args = [
+			'attachment-import' => false,
+		];
+
+		$import_args = wp_parse_args( $import_args, $default_args );
 
 		$post_data = static::_prepare_post_data( $data );
 
@@ -137,7 +145,27 @@ class Facebook_Posts {
 			];
 		}
 
-		// @Todo: Set featured image.
+		/**
+		 * Set featured image.
+		 */
+		if ( true === $import_args['attachment-import'] ) {
+
+			$attachment_url = ( ! empty( $data['full_picture'] ) ) ? $data['full_picture'] : '';
+
+			// If "full_picture" is empty then only check for "picture".
+			$attachment_url = ( empty( $attachment_url ) && ! empty( $data['picture'] ) ) ? $data['picture'] : $attachment_url;
+
+			if ( ! empty( $attachment_url ) ) {
+
+				$attachment_id = Media::create_attachment_by_url( $attachment_url );
+
+				if ( ! empty( $attachment_id ) && 0 < intval( $attachment_id ) ) {
+					set_post_thumbnail( $post_id, $attachment_id );
+				}
+
+			}
+		}
+
 		// @Todo: Import comments.
 
 		return [

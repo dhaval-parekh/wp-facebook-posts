@@ -25,10 +25,18 @@ class Facebook_Posts_Import extends Base {
 	 * [--import-file]
 	 * : JSON file to import posts.
 	 *
+	 * [--attachment-import]
+	 * : Whether or not to import attachment or not.
+	 * ---
+	 * default: false
+	 * options:
+	 *   - true
+	 *   - false
+	 *
 	 * [--dry-run]
 	 * : Whether or not to do dry run.
 	 * ---
-	 * default: false
+	 * default: true
 	 * options:
 	 *   - true
 	 *   - false
@@ -36,7 +44,7 @@ class Facebook_Posts_Import extends Base {
 	 * [--logs]
 	 * : Whether or not to show logs.
 	 * ---
-	 * default: false
+	 * default: true
 	 * options:
 	 *   - true
 	 *   - false
@@ -62,7 +70,8 @@ class Facebook_Posts_Import extends Base {
 
 		$this->_extract_args( $assoc_args );
 
-		$json_file = filter_var( get_flag_value( $assoc_args, 'import-file' ), FILTER_SANITIZE_STRING );
+		$json_file         = filter_var( get_flag_value( $assoc_args, 'import-file' ), FILTER_SANITIZE_STRING );
+		$attachment_import = filter_var( get_flag_value( $assoc_args, 'attachment-import', false ), FILTER_VALIDATE_BOOLEAN );
 
 		if ( empty( $json_file ) ) {
 			$this->error( 'Please provide JSON file.' );
@@ -97,6 +106,10 @@ class Facebook_Posts_Import extends Base {
 
 		$post_processed = 0;
 
+		$import_args = [
+			'attachment-import' => $attachment_import,
+		];
+
 		// Importing start.
 		$this->_import_start();
 
@@ -116,7 +129,7 @@ class Facebook_Posts_Import extends Base {
 					$counter['created']++;
 				}
 			} else {
-				$response = Facebook_Posts::import_single_post( $post_data );
+				$response = Facebook_Posts::import_single_post( $post_data, $import_args );
 
 				$post_id    = ( ! empty( $response['post_id'] ) ) ? $response['post_id'] : 0;
 				$is_updated = ( ! empty( $response['is_updated'] ) ) ? $response['is_updated'] : false;
