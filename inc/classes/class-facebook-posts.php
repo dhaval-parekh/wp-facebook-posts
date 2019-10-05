@@ -37,8 +37,8 @@ class Facebook_Posts {
 		 */
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->postmeta} WHERE meta_key=%s AND meta_value=%s;",
-				'facebook_post_id',
+				"SELECT * FROM {$wpdb->postmeta} WHERE meta_key=%s AND meta_value=%s LIMIT 0, 1;",
+				'wp_facebook_post_id',
 				sanitize_text_field( $facebook_post_id )
 			),
 			ARRAY_A
@@ -83,17 +83,27 @@ class Facebook_Posts {
 			'post_modified'     => get_date_from_gmt( $data['updated_time'] ),
 			'post_modified_gmt' => gmdate( 'Y-m-d H:i:s', strtotime( $data['updated_time'] ) ),
 
-			// Meta data.
-			'meta_input'        => [
-				'facebook_post_id'      => sanitize_text_field( $data['id'] ),
-				'_facebook_import_data' => wp_json_encode( $data ),
-			],
 		];
 
 		// If there is not title or content. then make it draft.
 		if ( empty( $post_data['post_title'] ) || empty( $post_data['post_content'] ) ) {
 			$post_data['post_status'] = 'draft';
 		}
+
+		/**
+		 * Make the hash of content.
+		 * So in future we can check whether we need to update content or not.
+		 * If content hash is same then we don't need to update content.
+		 * If it's different then we can process with update.
+		 */
+		$facebook_content_hash = static::generate_hash( $post_data );
+
+		// Don't include use meta_input field to create content hash.
+		$post_data['meta_input'] = [
+			'wp_facebook_post_id'             => sanitize_text_field( $data['id'] ),
+			'wp_facebook_import_content_hash' => $facebook_content_hash,
+			'_wp_facebook_import_data'        => wp_json_encode( $data ),
+		];
 
 		// Check if same post is already imported.
 		$existing_post_id = static::get_post_id_by_facebook_post_id( $data['id'] );
@@ -128,8 +138,30 @@ class Facebook_Posts {
 
 		$post_data = static::_prepare_post_data( $data );
 
+		/**
+		 * If we have existing post then check
+		 * Whether or not content need to update.
+		 */
+		if ( ! empty( $post_data['ID'] ) ) {
+
+			$current_hash = get_post_meta( $post_data['ID'], 'wp_facebook_import_content_hash', true );
+			$new_hash     = $post_data['meta_input']['wp_facebook_import_content_hash'];
+
+			if ( $current_hash === $new_hash ) {
+				return [
+					'post_id'    => $post_data['ID'],
+					'is_updated' => false,
+					'is_skipped' => true,
+					'message'    => 'No need to update post.',
+				];
+			}
+		}
+
 		$post_id = wp_insert_post( $post_data, true );
 
+		/**
+		 * Error during insert/update.
+		 */
 		if ( empty( $post_id ) || is_wp_error( $post_id ) ) {
 
 			$message = '';
@@ -141,6 +173,7 @@ class Facebook_Posts {
 			return [
 				'post_id'    => 0,
 				'is_updated' => false,
+				'is_skipped' => false,
 				'message'    => $message,
 			];
 		}
@@ -170,7 +203,33 @@ class Facebook_Posts {
 		return [
 			'post_id'    => $post_id,
 			'is_updated' => ( ! empty( $post_data['ID'] ) ) ? true : false,
+			'is_skipped' => false,
+			'message'    => '',
 		];
+
+	}
+
+	/**
+	 * To generate hash from give string/array.
+	 *
+	 * @param string|array $unique Value from which hash need to generate.
+	 *
+	 * @return string Hash.
+	 */
+	public static function generate_hash( $unique ) {
+
+		if ( empty( $unique ) || ! ( is_string( $unique ) || is_array( $unique ) ) ) {
+			return '';
+		}
+
+		if ( is_array( $unique ) ) {
+			ksort( $unique );
+			$unique = wp_json_encode( $unique );
+		}
+
+		$md5 = md5( $unique );
+
+		return $md5;
 
 	}
 
