@@ -33,3 +33,5 @@ tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 require $tests_dir . '/includes/bootstrap.php';
 
 require_once 'wp-cli.php';
+require_once 'wp-cli-util.php';
+require_once 'classes/class-helpers.php';
