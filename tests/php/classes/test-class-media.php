@@ -55,7 +55,7 @@ class Test_Media extends \WP_UnitTestCase {
 		/**
 		 * Test 1: Check without meta, Response should be 0.
 		 */
-		$this->assertEquals( 0, Media::find_attachment_by_import_url( $external_image_url ) );
+		$this->assertEmpty( Media::find_attachment_by_import_url( $external_image_url ) );
 
 		// Mock attachment meta.
 		update_post_meta( $attachment_id, 'wp_facebook_import_url_hash', $url_hash );
@@ -83,7 +83,7 @@ class Test_Media extends \WP_UnitTestCase {
 	 */
 	public function test_find_attachment_by_import_url_when_no_empty_value_passed() {
 
-		$this->assertEquals( 0, Media::find_attachment_by_import_url( '' ) );
+		$this->assertEmpty( Media::find_attachment_by_import_url( '' ) );
 
 	}
 
@@ -95,7 +95,7 @@ class Test_Media extends \WP_UnitTestCase {
 		/**
 		 * Test 1: Empty URL.
 		 */
-		$this->assertEquals( 0, Media::create_attachment_by_url( '' ) );
+		$this->assertEmpty( Media::create_attachment_by_url( '' ) );
 
 		/**
 		 * Test 2: Invalid Image.
