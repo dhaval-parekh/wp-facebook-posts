@@ -18,6 +18,8 @@ class Plugin {
 
 	/**
 	 * Construct method.
+	 *
+	 * @codeCoverageIgnore
 	 */
 	protected function __construct() {
 

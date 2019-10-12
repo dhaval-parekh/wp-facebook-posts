@@ -18,6 +18,8 @@ class WP_CLI {
 
 	/**
 	 * Construct method.
+	 *
+	 * @codeCoverageIgnore
 	 */
 	protected function __construct() {
 
