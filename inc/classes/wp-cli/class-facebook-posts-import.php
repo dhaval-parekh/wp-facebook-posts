@@ -33,6 +33,11 @@ class Facebook_Posts_Import extends Base {
 	 *   - true
 	 *   - false
 	 *
+	 * [--batch-size]
+	 * : Batch size
+	 * ---
+	 * default: 200 for actual run, 10000 for dry run.
+	 *
 	 * [--dry-run]
 	 * : Whether or not to do dry run.
 	 * ---
@@ -69,14 +74,18 @@ class Facebook_Posts_Import extends Base {
 		$this->_extract_args( $assoc_args );
 
 		$json_file         = filter_var( get_flag_value( $assoc_args, 'import-file' ), FILTER_SANITIZE_STRING );
+		$batch_size        = filter_var( get_flag_value( $assoc_args, 'batch-size' ), FILTER_SANITIZE_NUMBER_INT );
 		$attachment_import = filter_var( get_flag_value( $assoc_args, 'attachment-import', false ), FILTER_VALIDATE_BOOLEAN );
 
 		if ( empty( $json_file ) ) {
 			$this->error( 'Please provide JSON file.' );
+			return;
 		} elseif ( ! file_exists( $json_file ) ) {
 			$this->error( 'File does not exists in given path.' );
+			return;
 		} elseif ( 0 !== validate_file( $json_file ) ) {
 			$this->error( 'Invalid file provided.' );
+			return;
 		}
 
 		$json_content = file_get_contents( $json_file );
@@ -84,6 +93,7 @@ class Facebook_Posts_Import extends Base {
 
 		if ( empty( $json_content['data'] ) || ! is_array( $json_content['data'] ) ) {
 			$this->error( 'No post found in JSON file.' );
+			return;
 		}
 
 		$this->success( 'WP-CLI command "wp wp-facebook-posts-import import_from_json_file"' );
@@ -92,7 +102,10 @@ class Facebook_Posts_Import extends Base {
 		 * Since in dry run not insert/update will not perform.
 		 * keep batch size high for dry run.
 		 */
-		$batch_size = ( $this->dry_run ) ? 10000 : 200;
+		if ( empty( $batch_size ) || intval( $batch_size ) <= 0 ) {
+			$batch_size = ( $this->dry_run ) ? 10000 : 200;
+		}
+
 		$sleep_time = 1; // Time is in second.
 
 		if ( $this->dry_run ) {
@@ -256,8 +269,13 @@ class Facebook_Posts_Import extends Base {
 			$wp_object_cache->cache          = array();
 
 			if ( method_exists( $wp_object_cache, '__remoteset' ) ) {
-				// Important.
-				$wp_object_cache->__remoteset();
+
+				/**
+				 * WordPress class don't have this method.
+				 */
+				// @codeCoverageIgnoreStart
+				$wp_object_cache->__remoteset(); // Important.
+				// @codeCoverageIgnoreEnd
 			}
 		}
 	}

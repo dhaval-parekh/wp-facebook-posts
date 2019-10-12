@@ -40,12 +40,12 @@ class Media {
 	 *
 	 * @param string $url URL from which it's imported.
 	 *
-	 * @return int Attachment ID.
+	 * @return int Attachment ID on Success Otherwise 0.
 	 */
 	public static function find_attachment_by_import_url( $url ) {
 
 		if ( empty( $url ) ) {
-			return $url;
+			return 0;
 		}
 
 		// Create hash from URL.
@@ -76,7 +76,7 @@ class Media {
 
 		$attachment_id = ( ! empty( $row['post_id'] ) && 0 < intval( $row['post_id'] ) ) ? intval( $row['post_id'] ) : 0;
 
-		if ( empty( $attachment_id ) ) {
+		if ( ! empty( $attachment_id ) ) {
 			static::$downloaded_media[ $url_hash ] = $attachment_id;
 		}
 
@@ -109,23 +109,16 @@ class Media {
 		// Create hash from URL.
 		$url_hash = static::get_url_hash( $url );
 
-		$base_url = home_url();
-
 		// If the URL is absolute, but does not contain address, then upload it assuming base_site_url.
-		if ( preg_match( '|^/[\w\W]+$|', $url ) ) {
-			$url = rtrim( $base_url, '/' ) . $url;
+		if ( preg_match( '/^\/[\w\W]+$/m', $url ) ) {
+			$base_url = home_url();
+			$url      = rtrim( $base_url, '/' ) . $url;
 		}
 
 		$upload = static::fetch_remote_file( $url );
 
 		if ( is_wp_error( $upload ) || empty( $upload['file'] ) || empty( $upload['url'] ) || empty( $upload['type'] ) ) {
 			return $upload;
-		}
-
-		$info = wp_check_filetype( $upload['file'] );
-
-		if ( empty( $info ) ) {
-			return new \WP_Error( 'attachment_processing_error', __( 'Invalid file type', 'wp-facebook-posts' ) );
 		}
 
 		$attachment_data = [
@@ -195,16 +188,26 @@ class Media {
 
 		// Make sure the fetch was successful.
 		if ( 200 !== intval( $remote_response_code ) ) {
+			/**
+			 * Ignoring code coverage since, It require Dummy URL redirection.
+			 * To test this case.
+			 */
+			// @codeCoverageIgnoreStart
 			return new \WP_Error(
 				'import_file_error',
 				/* translators: %s Response code */
 				sprintf( __( 'Remote server returned error response %1$d %2$s', 'wp-facebook-posts' ), esc_html( $remote_response_code ), get_status_header_desc( $remote_response_code ) )
 			);
+			// @codeCoverageIgnoreEnd
 		}
 
 		$body = wp_remote_retrieve_body( $remote_response );
 
 		$upload = wp_upload_bits( $file_name, null, $body );
+
+		if ( ! empty( $upload['error'] ) ) {
+			return new \WP_Error( 'attachment_processing_error', $upload['error'] );
+		}
 
 		return ( ! empty( $upload ) && is_array( $upload ) ) ? $upload : [];
 	}
